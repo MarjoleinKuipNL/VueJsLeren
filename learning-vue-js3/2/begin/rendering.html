@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+<style>
+    [v-cloak] {
+        display: none;
+    }
+</style>
+
+<div id="app">
+    <div class="container">
+        <div class="card mt-5">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light thead-inner">
+                    <th></th>
+                    <th class="text-center text">Name</th>
+                    <th class="text-center text">Close approach Date</th>
+                </thead>
+                <tbody v-cloak class="tbody-inner tbody-light">
+                    <tr v-for="a in asteroids" class="row tr ">
+                        <td>{{ a.name }}</td>
+                        <td>{{ getCloseApproachDate(a) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            imgSrc: '',
+            imgTitle: '',
+            asteroids: []
+        },
+        created: function() {
+            this.fetchAsteroids();
+        },
+        methods: {
+            fetchApod: function() {
+                var apiKey = 'DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                var url = 'https://api.nasa.gov/planetary/apod?api_key=DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                axios.get(url)
+                    .then(function(res) {
+                        vm.imgSrc = res.data.url;
+                        vm.imgTitle = res.data.title;
+                    });
+            },
+            fetchAsteroids: function() {
+                var apiKey = 'DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                var url = 'https://api.nasa.gov/neo/rest/v1/neo/browse?api_key=DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                axios.get(url)
+                    .then(function(res) {
+                        vm.asteroids = res.data.near_earth_objects_slice(0, 10);
+                    });
+            },
+            getCloseApproachDate: function(a) {
+                if (a.close_approach_date > 0) {
+                    return a.close_approach_data[0].close_approach_data;
+                }
+            }
+        }
+    });
+</script>

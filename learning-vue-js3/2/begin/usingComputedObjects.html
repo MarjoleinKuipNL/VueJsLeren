@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+<style>
+    [v-cloak] {
+        display: none;
+    }
+</style>
+
+<div id="app">
+    <div class="container">
+        <div class="card mt-5">
+            <h2 class="card-header">
+                Near earth Objects
+            </h2>
+            <div class="m-3" v-cloak v-if="asteroids.length > 0">
+                <p>
+                    Showing {{asteroids.length}} items
+                </p>
+                <p>{{ closestObject}} has the shortest miss distance</p>
+            </div>
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light thead-inner">
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Close approach Date</th>
+                    <th>Miss Distance</th>
+                    <th>Remove</th>
+                </thead>
+                <tbody v-cloak>
+                    <tr v-for="(a, index) in asteroids " :key="a.neo_reference_id ">
+                        <td>{{ index+1 }}</td>
+                        <td>{{ a.name }}</td>
+                        <td>{{ getCloseApproachDate(a) }}</td>
+                        <td>
+                            <ul v-if="a.close_approach_data.length> 0">
+                                <li v-for="(value, key) in a.close_approach_data[0].miss_distance">
+                                    {{key}}:{{value}}
+                                </li>
+                            </ul>
+                        </td>
+                        <td>
+                            <button @click="remove(index)" class="btn btn-warning">Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            imgSrc: '',
+            imgTitle: '',
+            asteroids: []
+        },
+        computed: {
+            numAsteroids: function() {
+                return this.asteroids.length;
+            },
+            closestObject: function() {
+                var neosHavingData = this.asteroids.filter(function(neo) {
+                    return neo.close_approach_data.length > 0;
+                });
+                var simpleNeos = neosHavingData.map(function(neo) {
+                    return {
+                        name: neo.name,
+                        miles: neo.close_approach_data[0].miss_distance.miles
+                    }
+                });
+                var sortedNeos = simpleNeos.sort(function(a, b) {
+                    return a.miles - b.miles
+                });
+                return sortedNeos[0].name;
+            }
+        },
+        created: function() {
+            this.fetchAsteroids();
+        },
+        methods: {
+            fetchApod: function() {
+                var apiKey = 'DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                var url = 'https://api.nasa.gov/planetary/apod?api_key=DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                axios.get(url)
+                    .then(function(res) {
+                        vm.imgSrc = res.data.url;
+                        vm.imgTitle = res.data.title;
+                    });
+            },
+            fetchAsteroids: function() {
+                var apiKey = 'DEffaIosukVlPvxxVnedTFpjwTZZgXf0u3YHhDpx';
+                var url = 'https://api.nasa.gov/neo/rest/v1/neo/browse?api_key=' + apiKey;
+                axios.get(url)
+                    .then(function(res) {
+                        console.log(res);
+                        vm.asteroids = res.data.near_earth_objects.slice(0, 10);
+                    });
+            },
+            getCloseApproachDate: function(a) {
+                if (a.close_approach_date > 0) {
+                    return a.close_approach_data[0].close_approach_data;
+                }
+            },
+            remove: function(index) {
+                this.asteroids.splice(index, 1);
+            }
+        }
+    });
+</script>
